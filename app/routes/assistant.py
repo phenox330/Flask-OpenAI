@@ -1,26 +1,33 @@
-from flask import render_template, Blueprint, request, jsonify
+from flask import render_template, Blueprint, request, jsonify, current_app
 from app.services.assistant import AssistantService
 
 assistant_bp = Blueprint('assistant', __name__)
 
+@assistant_bp.route('/', methods=['GET'])
 @assistant_bp.route('/assistant', methods=['GET', 'POST'])
 def assistant():
     if request.method == 'POST':
-        # Extract message from the POST request
         data = request.get_json()
         message = data.get('message', '')
 
         if not message:
             return jsonify({'error': 'No message provided'}), 400
       
-        assistant_service = AssistantService()
-
-        # Here you would typically process the message and generate a response
-        # For demonstration, let's just echo the message back
-        assistant_response = assistant_service.run_assistant(message)
-        
-        # Return response as JSON for the fetch call in home.html
-        return jsonify({'assistant_response': assistant_response})
+        try:
+            assistant_service = AssistantService()
+            assistant_response = assistant_service.run_assistant(message)
+            
+            return jsonify({'assistant_response': assistant_response})
+        except Exception as e:
+            current_app.logger.error(f"Error processing assistant request: {str(e)}")
+            return jsonify({'error': 'An error occurred while processing your request'}), 500
     else:
-        # For GET requests, show the form without any initial response
         return render_template('home.html')
+
+@assistant_bp.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+@assistant_bp.errorhandler(500)
+def internal_server_error(e):
+    return render_template('500.html'), 500

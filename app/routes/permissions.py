@@ -10,7 +10,7 @@ def home():
 
 @permissions_bp.route('/user/<int:username>/permissions')
 def user_permissions(user_id):
-    username = 'User' + str(user_id)
+    username = 'User' + str(user_id) 
     json_response = {'username': username, 'permissions': 'read'}
     return render_template('json.html', json_response=json_response)
 
